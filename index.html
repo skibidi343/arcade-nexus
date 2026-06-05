@@ -1,1 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arcade Nexus</title>
 
+<link rel="stylesheet" href="styles.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ========================= -->
+<!-- LOADING SCREEN -->
+<!-- ========================= -->
+
+<div id="loadingScreen">
+    <div class="loader-wrapper">
+        <div class="neon-spinner"></div>
+
+        <h1 class="loading-title">
+            Arcade Nexus
+        </h1>
+
+        <p class="loading-text">
+            Loading Arcade Systems...
+        </p>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- PARTICLE BACKGROUND -->
+<!-- ========================= -->
+
+<canvas id="particleCanvas"></canvas>
+
+<!-- ========================= -->
+<!-- APP CONTAINER -->
+<!-- ========================= -->
+
+<div id="app">
+
+    <!-- ========================= -->
+    <!-- SIDEBAR -->
+    <!-- ========================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo-area">
+            <h1 class="logo">
+                ARCADE
+                <span>NEXUS</span>
+            </h1>
+        </div>
+
+        <nav class="nav-menu">
+
+            <button class="nav-btn active" data-page="dashboard">
+                Home
+            </button>
+
+            <button class="nav-btn" data-page="profile">
+                Profile
+            </button>
+
+            <button class="nav-btn" data-page="settings">
+                Settings
+            </button>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <p>Version 1.0</p>
+        </div>
+
+    </aside>
+
+    <!-- ========================= -->
+    <!-- MAIN CONTENT -->
+    <!-- ========================= -->
+
+    <main class="main-content">
+
+        <!-- DASHBOARD -->
+
+        <section id="dashboardPage" class="page active-page">
+
+            <header class="hero">
+
+                <h1 class="hero-title">
+                    Welcome To
+                    <span>Arcade Nexus</span>
+                </h1>
+
+                <p class="hero-subtitle">
+                    A futuristic collection of browser games.
+                </p>
+
+            </header>
+
+            <!-- STATS -->
+
+            <section class="dashboard-stats">
+
+                <div class="stat-card">
+                    <h3>Total Playtime</h3>
+                    <span id="playtimeDisplay">0h 0m</span>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Achievements</h3>
+                    <span id="achievementCount">0</span>
+                </div>
+
+                <div class="stat-card">
+                    <h3>Games Played</h3>
+                    <span id="gamesPlayed">0</span>
+                </div>
+
+            </section>
+
+            <!-- GAME GRID -->
+
+            <section class="game-grid">
+
+                <!-- SNAKE -->
+
+                <div class="game-card">
+
+                    <div class="card-glow"></div>
+
+                    <h2>Snake</h2>
+
+                    <p>
+                        Neon snake action with increasing speed.
+                    </p>
+
+                    <div class="score-preview">
+                        High Score:
+                        <span id="snakeHighScore">0</span>
+                    </div>
+
+                    <button class="play-btn" data-game="snake">
+                        Play Now
+                    </button>
+
+                </div>
+
+                <!-- TIC TAC TOE -->
+
+                <div class="game-card">
+
+                    <div class="card-glow"></div>
+
+                    <h2>Tic Tac Toe</h2>
+
+                    <p>
+                        Challenge an unbeatable AI.
+                    </p>
+
+                    <div class="score-preview">
+                        Wins:
+                        <span id="tttWins">0</span>
+                    </div>
+
+                    <button class="play-btn" data-game="tictactoe">
+                        Play Now
+                    </button>
+
+                </div>
+
+                <!-- REACTION -->
+
+                <div class="game-card">
+
+                    <div class="card-glow"></div>
+
+                    <h2>Reaction Test</h2>
+
+                    <p>
+                        Test your reflexes.
+                    </p>
+
+                    <div class="score-preview">
+                        Best:
+                        <span id="reactionBest">0ms</span>
+                    </div>
+
+                    <button class="play-btn" data-game="reaction">
+                        Play Now
+                    </button>
+
+                </div>
+
+                <!-- MEMORY -->
+
+                <div class="game-card">
+
+                    <div class="card-glow"></div>
+
+                    <h2>Memory Match</h2>
+
+                    <p>
+                        Match cards as fast as possible.
+                    </p>
+
+                    <div class="score-preview">
+                        Best Time:
+                        <span id="memoryBest">--</span>
+                    </div>
+
+                    <button class="play-btn" data-game="memory">
+                        Play Now
+                    </button>
+
+                </div>
+
+                <!-- PLATFORMER -->
+
+                <div class="game-card">
+
+                    <div class="card-glow"></div>
+
+                    <h2>Platformer</h2>
+
+                    <p>
+                        Jump, collect, survive.
+                    </p>
+
+                    <div class="score-preview">
+                        High Score:
+                        <span id="platformerHighScore">0</span>
+                    </div>
+
+                    <button class="play-btn" data-game="platformer">
+                        Play Now
+                    </button>
+
+                </div>
+
+            </section>
+
+        </section>
+
+        <!-- ========================= -->
+        <!-- PROFILE PAGE -->
+        <!-- ========================= -->
+
+        <section id="profilePage" class="page">
+
+            <h1 class="section-title">
+                Profile
+            </h1>
+
+            <div class="profile-container">
+
+                <div class="profile-card">
+
+                    <label>
+                        Username
+                    </label>
+
+                    <input
+                        type="text"
+                        id="usernameInput"
+                        placeholder="Enter username"
+                    >
+
+                    <button id="saveUsernameBtn">
+                        Save
+                    </button>
+
+                </div>
+
+                <div class="profile-card">
+
+                    <h3>Statistics</h3>
+
+                    <ul>
+
+                        <li>
+                            Total Playtime:
+                            <span id="profilePlaytime">
+                                0h
+                            </span>
+                        </li>
+
+                        <li>
+                            Games Played:
+                            <span id="profileGamesPlayed">
+                                0
+                            </span>
+                        </li>
+
+                        <li>
+                            Achievements:
+                            <span id="profileAchievements">
+                                0
+                            </span>
+                        </li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+
+            <!-- ACHIEVEMENTS -->
+
+            <div class="achievement-panel">
+
+                <h2>Achievements</h2>
+
+                <div id="achievementList">
+
+                    <div class="achievement locked">
+                        First Win
+                    </div>
+
+                    <div class="achievement locked">
+                        Snake Score 50+
+                    </div>
+
+                    <div class="achievement locked">
+                        Reaction Time < 200ms
+                    </div>
+
+                    <div class="achievement locked">
+                        Perfect Memory Run
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ========================= -->
+        <!-- SETTINGS PAGE -->
+        <!-- ========================= -->
+
+        <section id="settingsPage" class="page">
+
+            <h1 class="section-title">
+                Settings
+            </h1>
+
+            <div class="settings-container">
+
+                <div class="setting-row">
+
+                    <label>Dark Mode</label>
+
+                    <input
+                        type="checkbox"
+                        id="themeToggle"
+                    >
+
+                </div>
+
+                <div class="setting-row">
+
+                    <label>Sound</label>
+
+                    <input
+                        type="checkbox"
+                        id="soundToggle"
+                        checked
+                    >
+
+                </div>
+
+                <div class="setting-row">
+
+                    <label>Music</label>
+
+                    <input
+                        type="checkbox"
+                        id="musicToggle"
+                        checked
+                    >
+
+                </div>
+
+                <div class="setting-row">
+
+                    <label>Difficulty</label>
+
+                    <select id="difficultySelect">
+
+                        <option value="easy">
+                            Easy
+                        </option>
+
+                        <option value="normal" selected>
+                            Normal
+                        </option>
+
+                        <option value="hard">
+                            Hard
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <button id="resetDataBtn" class="danger-btn">
+                    Reset All Data
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- ========================= -->
+<!-- GAME MODAL -->
+<!-- ========================= -->
+
+<div id="gameModal" class="modal">
+
+    <div class="modal-content">
+
+        <button id="closeGameModal" class="close-btn">
+            ✕
+        </button>
+
+        <div class="modal-header">
+
+            <h2 id="modalTitle">
+                Game
+            </h2>
+
+        </div>
+
+        <div class="scoreboard">
+
+            <div>
+                Score:
+                <span id="gameScore">
+                    0
+                </span>
+            </div>
+
+            <div>
+                High Score:
+                <span id="gameHighScore">
+                    0
+                </span>
+            </div>
+
+        </div>
+
+        <div id="gameContainer">
+
+            <canvas
+                id="gameCanvas"
+                width="900"
+                height="600">
+            </canvas>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- ACHIEVEMENT POPUP -->
+<!-- ========================= -->
+
+<div id="achievementPopup">
+
+    <h3>
+        Achievement Unlocked
+    </h3>
+
+    <p id="achievementPopupText"></p>
+
+</div>
+
+<!-- ========================= -->
+<!-- AUDIO -->
+<!-- ========================= -->
+
+<audio id="clickSound"></audio>
+<audio id="successSound"></audio>
+<audio id="bgMusic" loop></audio>
+
+<!-- ========================= -->
+<!-- SCRIPTS -->
+<!-- ========================= -->
+
+<script type="module" src="main.js"></script>
+
+</body>
+</html>

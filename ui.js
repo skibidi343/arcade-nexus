@@ -1,0 +1,790 @@
+import { DOMUtils, AnimationUtils } from "./utils.js";
+import { SettingsStorage } from "./storage.js";
+import { AudioSystem } from "./audio.js";
+
+export class UIManager {
+    constructor() {
+        this.pages = {};
+        this.modal = null;
+        this.loadingScreen = null;
+        this.currentPage = "dashboard";
+    }
+
+    init() {
+        this.cacheElements();
+
+        this.setupNavigation();
+
+        this.setupModal();
+
+        this.setupTheme();
+
+        this.setupButtons();
+
+        this.restoreSettings();
+    }
+
+    cacheElements() {
+        this.pages = {
+            dashboard:
+                document.getElementById(
+                    "dashboardPage"
+                ),
+
+            profile:
+                document.getElementById(
+                    "profilePage"
+                ),
+
+            settings:
+                document.getElementById(
+                    "settingsPage"
+                )
+        };
+
+        this.modal =
+            document.getElementById(
+                "gameModal"
+            );
+
+        this.loadingScreen =
+            document.getElementById(
+                "loadingScreen"
+            );
+    }
+
+    setupNavigation() {
+        const navButtons =
+            document.querySelectorAll(
+                ".nav-btn"
+            );
+
+        navButtons.forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
+                    const target =
+                        button.dataset.page;
+
+                    this.showPage(
+                        target
+                    );
+
+                    AudioSystem.playClick();
+                }
+            );
+        });
+    }
+
+    showPage(pageName) {
+        Object.values(
+            this.pages
+        ).forEach(page => {
+            page.classList.remove(
+                "active-page"
+            );
+        });
+
+        document
+            .querySelectorAll(
+                ".nav-btn"
+            )
+            .forEach(btn => {
+                btn.classList.remove(
+                    "active"
+                );
+            });
+
+        if (
+            this.pages[pageName]
+        ) {
+            this.pages[
+                pageName
+            ].classList.add(
+                "active-page"
+            );
+        }
+
+        const activeButton =
+            document.querySelector(
+                `[data-page="${pageName}"]`
+            );
+
+        if (
+            activeButton
+        ) {
+            activeButton.classList.add(
+                "active"
+            );
+        }
+
+        this.currentPage =
+            pageName;
+    }
+
+    setupModal() {
+        const closeBtn =
+            document.getElementById(
+                "closeGameModal"
+            );
+
+        closeBtn?.addEventListener(
+            "click",
+            () => {
+                this.closeModal();
+            }
+        );
+
+        window.addEventListener(
+            "click",
+            event => {
+                if (
+                    event.target ===
+                    this.modal
+                ) {
+                    this.closeModal();
+                }
+            }
+        );
+    }
+
+    openModal(
+        title = "Game"
+    ) {
+        const titleElement =
+            document.getElementById(
+                "modalTitle"
+            );
+
+        if (
+            titleElement
+        ) {
+            titleElement.textContent =
+                title;
+        }
+
+        this.modal.classList.add(
+            "show"
+        );
+
+        document.body.style
+            .overflow =
+            "hidden";
+
+        AudioSystem.playClick();
+    }
+
+    closeModal() {
+        this.modal.classList.remove(
+            "show"
+        );
+
+        document.body.style
+            .overflow =
+            "auto";
+
+        AudioSystem.playClick();
+    }
+
+    setupTheme() {
+        const toggle =
+            document.getElementById(
+                "themeToggle"
+            );
+
+        toggle?.addEventListener(
+            "change",
+            () => {
+                if (
+                    toggle.checked
+                ) {
+                    this.setTheme(
+                        "light"
+                    );
+                } else {
+                    this.setTheme(
+                        "dark"
+                    );
+                }
+
+                AudioSystem.playClick();
+            }
+        );
+    }
+
+    setTheme(theme) {
+        if (
+            theme === "light"
+        ) {
+            document.body.classList.add(
+                "light-theme"
+            );
+        } else {
+            document.body.classList.remove(
+                "light-theme"
+            );
+        }
+
+        SettingsStorage.setTheme(
+            theme
+        );
+    }
+
+    restoreSettings() {
+        const settings =
+            SettingsStorage.getSettings();
+
+        const themeToggle =
+            document.getElementById(
+                "themeToggle"
+            );
+
+        if (
+            settings.theme ===
+            "light"
+        ) {
+            document.body.classList.add(
+                "light-theme"
+            );
+
+            if (
+                themeToggle
+            ) {
+                themeToggle.checked =
+                    true;
+            }
+        }
+    }
+
+    setupButtons() {
+        const buttons =
+            document.querySelectorAll(
+                "button"
+            );
+
+        buttons.forEach(
+            button => {
+                button.addEventListener(
+                    "mouseenter",
+                    () => {
+                        AudioSystem.playHover();
+                    }
+                );
+            }
+        );
+    }
+
+    showLoading() {
+        if (
+            !this.loadingScreen
+        ) {
+            return;
+        }
+
+        this.loadingScreen.style.display =
+            "flex";
+    }
+
+    hideLoading(
+        delay = 1200
+    ) {
+        if (
+            !this.loadingScreen
+        ) {
+            return;
+        }
+
+        setTimeout(() => {
+            this.loadingScreen.style.opacity =
+                "0";
+
+            setTimeout(() => {
+                this.loadingScreen.style.display =
+                    "none";
+            }, 1000);
+        }, delay);
+    }
+
+    pulseElement(
+        element
+    ) {
+        AnimationUtils.pulse(
+            element
+        );
+    }
+
+    shakeElement(
+        element
+    ) {
+        AnimationUtils.shake(
+            element
+        );
+    }
+
+    setGameScore(
+        score
+    ) {
+        const scoreEl =
+            document.getElementById(
+                "gameScore"
+            );
+
+        if (
+            scoreEl
+        ) {
+            scoreEl.textContent =
+                score;
+        }
+    }
+
+    setGameHighScore(
+        score
+    ) {
+        const scoreEl =
+            document.getElementById(
+                "gameHighScore"
+            );
+
+        if (
+            scoreEl
+        ) {
+            scoreEl.textContent =
+                score;
+        }
+    }
+
+    updateDashboard(data) {
+        const playtime =
+            document.getElementById(
+                "playtimeDisplay"
+            );
+
+        const achievements =
+            document.getElementById(
+                "achievementCount"
+            );
+
+        const gamesPlayed =
+            document.getElementById(
+                "gamesPlayed"
+            );
+
+        if (playtime) {
+            const totalSeconds =
+                data.profile.totalPlaytime;
+
+            const hours =
+                Math.floor(
+                    totalSeconds / 3600
+                );
+
+            const minutes =
+                Math.floor(
+                    (totalSeconds % 3600) /
+                        60
+                );
+
+            playtime.textContent =
+                `${hours}h ${minutes}m`;
+        }
+
+        if (achievements) {
+            achievements.textContent =
+                data.achievements
+                    .unlocked.length;
+        }
+
+        if (gamesPlayed) {
+            gamesPlayed.textContent =
+                data.profile.gamesPlayed;
+        }
+    }
+
+    updateProfile(data) {
+        const usernameInput =
+            document.getElementById(
+                "usernameInput"
+            );
+
+        const playtime =
+            document.getElementById(
+                "profilePlaytime"
+            );
+
+        const gamesPlayed =
+            document.getElementById(
+                "profileGamesPlayed"
+            );
+
+        const achievementCount =
+            document.getElementById(
+                "profileAchievements"
+            );
+
+        if (
+            usernameInput
+        ) {
+            usernameInput.value =
+                data.profile.username;
+        }
+
+        if (
+            playtime
+        ) {
+            const totalSeconds =
+                data.profile.totalPlaytime;
+
+            const hours =
+                Math.floor(
+                    totalSeconds / 3600
+                );
+
+            const minutes =
+                Math.floor(
+                    (totalSeconds % 3600) /
+                        60
+                );
+
+            playtime.textContent =
+                `${hours}h ${minutes}m`;
+        }
+
+        if (
+            gamesPlayed
+        ) {
+            gamesPlayed.textContent =
+                data.profile.gamesPlayed;
+        }
+
+        if (
+            achievementCount
+        ) {
+            achievementCount.textContent =
+                data.achievements
+                    .unlocked.length;
+        }
+    }
+
+    updateScorePreviews(data) {
+        const snake =
+            document.getElementById(
+                "snakeHighScore"
+            );
+
+        const reaction =
+            document.getElementById(
+                "reactionBest"
+            );
+
+        const memory =
+            document.getElementById(
+                "memoryBest"
+            );
+
+        const platformer =
+            document.getElementById(
+                "platformerHighScore"
+            );
+
+        const ttt =
+            document.getElementById(
+                "tttWins"
+            );
+
+        if (snake) {
+            snake.textContent =
+                data.scores.snake.highScore;
+        }
+
+        if (reaction) {
+            reaction.textContent =
+                data.scores.reaction
+                    .bestTime === null
+                    ? "--"
+                    : `${Math.round(
+                          data.scores.reaction
+                              .bestTime
+                      )}ms`;
+        }
+
+        if (memory) {
+            memory.textContent =
+                data.scores.memory
+                    .bestTime === null
+                    ? "--"
+                    : `${Math.round(
+                          data.scores.memory
+                              .bestTime
+                      )}s`;
+        }
+
+        if (platformer) {
+            platformer.textContent =
+                data.scores.platformer
+                    .highScore;
+        }
+
+        if (ttt) {
+            ttt.textContent =
+                data.scores.tictactoe.wins;
+        }
+    }
+
+    showAchievement(name) {
+        const popup =
+            document.getElementById(
+                "achievementPopup"
+            );
+
+        const text =
+            document.getElementById(
+                "achievementPopupText"
+            );
+
+        if (
+            !popup ||
+            !text
+        ) {
+            return;
+        }
+
+        text.textContent =
+            name;
+
+        popup.classList.add(
+            "show"
+        );
+
+        AudioSystem.playAchievement();
+
+        setTimeout(() => {
+            popup.classList.remove(
+                "show"
+            );
+        }, 3500);
+    }
+
+    refreshAchievementUI(
+        unlockedList
+    ) {
+        const achievementElements =
+            document.querySelectorAll(
+                ".achievement"
+            );
+
+        achievementElements.forEach(
+            element => {
+                const name =
+                    element.textContent.trim();
+
+                if (
+                    unlockedList.includes(
+                        name
+                    )
+                ) {
+                    element.classList.remove(
+                        "locked"
+                    );
+
+                    element.classList.add(
+                        "unlocked"
+                    );
+                }
+            }
+        );
+    }
+
+    setupGameButtons(
+        callback
+    ) {
+        const buttons =
+            document.querySelectorAll(
+                ".play-btn"
+            );
+
+        buttons.forEach(
+            button => {
+                button.addEventListener(
+                    "click",
+                    () => {
+                        const game =
+                            button.dataset
+                                .game;
+
+                        AudioSystem.playClick();
+
+                        if (
+                            callback
+                        ) {
+                            callback(
+                                game
+                            );
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+    setupUsernameSave(
+        callback
+    ) {
+        const saveButton =
+            document.getElementById(
+                "saveUsernameBtn"
+            );
+
+        const input =
+            document.getElementById(
+                "usernameInput"
+            );
+
+        if (
+            !saveButton ||
+            !input
+        ) {
+            return;
+        }
+
+        saveButton.addEventListener(
+            "click",
+            () => {
+                const username =
+                    input.value.trim();
+
+                if (
+                    callback
+                ) {
+                    callback(
+                        username
+                    );
+                }
+
+                AudioSystem.playSuccess();
+            }
+        );
+    }
+
+    setupResetButton(
+        callback
+    ) {
+        const button =
+            document.getElementById(
+                "resetDataBtn"
+            );
+
+        if (
+            !button
+        ) {
+            return;
+        }
+
+        button.addEventListener(
+            "click",
+            () => {
+                const confirmed =
+                    confirm(
+                        "Reset all Arcade Nexus data?"
+                    );
+
+                if (
+                    !confirmed
+                ) {
+                    return;
+                }
+
+                AudioSystem.playError();
+
+                if (
+                    callback
+                ) {
+                    callback();
+                }
+            }
+        );
+    }
+
+    setupSettingsEvents(
+        callback
+    ) {
+        const soundToggle =
+            document.getElementById(
+                "soundToggle"
+            );
+
+        const musicToggle =
+            document.getElementById(
+                "musicToggle"
+            );
+
+        const difficulty =
+            document.getElementById(
+                "difficultySelect"
+            );
+
+        [
+            soundToggle,
+            musicToggle,
+            difficulty
+        ].forEach(
+            element => {
+                if (
+                    !element
+                ) {
+                    return;
+                }
+
+                element.addEventListener(
+                    "change",
+                    () => {
+                        if (
+                            callback
+                        ) {
+                            callback();
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+    applySettings(
+        settings
+    ) {
+        const sound =
+            document.getElementById(
+                "soundToggle"
+            );
+
+        const music =
+            document.getElementById(
+                "musicToggle"
+            );
+
+        const difficulty =
+            document.getElementById(
+                "difficultySelect"
+            );
+
+        if (sound) {
+            sound.checked =
+                settings.sound;
+        }
+
+        if (music) {
+            music.checked =
+                settings.music;
+        }
+
+        if (
+            difficulty
+        ) {
+            difficulty.value =
+                settings.difficulty;
+        }
+    }
+}
+
+export const UI = new UIManager();
+
+window.UI = UI;
