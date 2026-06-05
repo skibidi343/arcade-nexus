@@ -1,0 +1,236 @@
+import { AudioSystem } from "./audio.js";
+
+export class SnakeGame {
+    constructor(container) {
+        this.container = container;
+
+        this.canvas = null;
+        this.ctx = null;
+
+        this.gridSize = 20;
+        this.tileCount = 20;
+
+        this.snake = [];
+        this.direction = { x: 1, y: 0 };
+
+        this.food = { x: 0, y: 0 };
+
+        this.score = 0;
+        this.highScore = 0;
+
+        this.gameLoop = null;
+        this.speed = 120;
+
+        this.nextDirection = { x: 1, y: 0 };
+
+        this.running = false;
+    }
+
+    init() {
+        this.createCanvas();
+        this.resetGame();
+        this.spawnFood();
+        this.bindControls();
+        this.startGame();
+    }
+
+    createCanvas() {
+        this.container.innerHTML = "";
+
+        this.canvas = document.createElement("canvas");
+        this.canvas.width = 400;
+        this.canvas.height = 400;
+
+        this.ctx = this.canvas.getContext("2d");
+
+        this.container.appendChild(this.canvas);
+    }
+
+    resetGame() {
+        this.snake = [
+            { x: 10, y: 10 },
+            { x: 9, y: 10 },
+            { x: 8, y: 10 }
+        ];
+
+        this.direction = { x: 1, y: 0 };
+        this.nextDirection = { x: 1, y: 0 };
+
+        this.score = 0;
+        this.speed = 120;
+        this.running = true;
+    }
+
+    spawnFood() {
+        this.food = {
+            x: Math.floor(Math.random() * this.tileCount),
+            y: Math.floor(Math.random() * this.tileCount)
+        };
+
+        // avoid spawning inside snake
+        if (this.snake.some(s => s.x === this.food.x && s.y === this.food.y)) {
+            this.spawnFood();
+        }
+    }
+
+    bindControls() {
+        document.onkeydown = (e) => {
+            switch (e.key) {
+                case "ArrowUp":
+                    if (this.direction.y !== 1)
+                        this.nextDirection = { x: 0, y: -1 };
+                    break;
+
+                case "ArrowDown":
+                    if (this.direction.y !== -1)
+                        this.nextDirection = { x: 0, y: 1 };
+                    break;
+
+                case "ArrowLeft":
+                    if (this.direction.x !== 1)
+                        this.nextDirection = { x: -1, y: 0 };
+                    break;
+
+                case "ArrowRight":
+                    if (this.direction.x !== -1)
+                        this.nextDirection = { x: 1, y: 0 };
+                    break;
+            }
+        };
+    }
+
+    startGame() {
+        if (this.gameLoop) clearInterval(this.gameLoop);
+
+        this.gameLoop = setInterval(() => {
+            this.update();
+            this.draw();
+        }, this.speed);
+    }
+
+    update() {
+        if (!this.running) return;
+
+        this.direction = this.nextDirection;
+
+        const head = {
+            x: this.snake[0].x + this.direction.x,
+            y: this.snake[0].y + this.direction.y
+        };
+
+        // wall collision
+        if (
+            head.x < 0 ||
+            head.y < 0 ||
+            head.x >= this.tileCount ||
+            head.y >= this.tileCount
+        ) {
+            return this.gameOver();
+        }
+
+        // self collision
+        if (this.snake.some(s => s.x === head.x && s.y === head.y)) {
+            return this.gameOver();
+        }
+
+        this.snake.unshift(head);
+
+        // food
+        if (head.x === this.food.x && head.y === this.food.y) {
+            this.score++;
+
+            AudioSystem?.playSuccess?.();
+
+            this.spawnFood();
+
+            this.increaseSpeed();
+        } else {
+            this.snake.pop();
+        }
+    }
+
+    increaseSpeed() {
+        if (this.speed > 60) {
+            this.speed -= 2;
+            this.startGame();
+        }
+    }
+
+    draw() {
+        // background
+        this.ctx.fillStyle = "#050510";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // grid glow
+        this.ctx.strokeStyle = "rgba(0,255,255,0.05)";
+        for (let i = 0; i < this.tileCount; i++) {
+            for (let j = 0; j < this.tileCount; j++) {
+                this.ctx.strokeRect(
+                    i * this.gridSize,
+                    j * this.gridSize,
+                    this.gridSize,
+                    this.gridSize
+                );
+            }
+        }
+
+        // snake
+        this.snake.forEach((segment, i) => {
+            this.ctx.fillStyle = i === 0 ? "#00ffff" : "#00aaaa";
+            this.ctx.shadowColor = "#00ffff";
+            this.ctx.shadowBlur = 10;
+
+            this.ctx.fillRect(
+                segment.x * this.gridSize,
+                segment.y * this.gridSize,
+                this.gridSize - 2,
+                this.gridSize - 2
+            );
+        });
+
+        // food
+        this.ctx.fillStyle = "#ff0066";
+        this.ctx.shadowColor = "#ff0066";
+        this.ctx.shadowBlur = 15;
+
+        this.ctx.fillRect(
+            this.food.x * this.gridSize,
+            this.food.y * this.gridSize,
+            this.gridSize - 2,
+            this.gridSize - 2
+        );
+
+        // score
+        this.ctx.shadowBlur = 0;
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.font = "16px Arial";
+        this.ctx.fillText(`Score: ${this.score}`, 10, 20);
+    }
+
+    gameOver() {
+        this.running = false;
+
+        clearInterval(this.gameLoop);
+
+        this.ctx.fillStyle = "rgba(0,0,0,0.7)";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.fillStyle = "#ff0044";
+        this.ctx.font = "30px Arial";
+        this.ctx.fillText(
+            "GAME OVER",
+            100,
+            200
+        );
+
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.font = "20px Arial";
+        this.ctx.fillText(
+            `Score: ${this.score}`,
+            140,
+            240
+        );
+
+        AudioSystem?.playError?.();
+    }
+}

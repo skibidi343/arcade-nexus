@@ -1,0 +1,453 @@
+import { Constants } from "./utils.js";
+
+export class StorageManager {
+    static defaultData() {
+        return {
+            profile: {
+                username: "Player",
+                totalPlaytime: 0,
+                gamesPlayed: 0
+            },
+
+            settings: {
+                theme: Constants.THEMES.DARK,
+                sound: true,
+                music: true,
+                difficulty: Constants.DIFFICULTY.NORMAL
+            },
+
+            scores: {
+                snake: {
+                    highScore: 0
+                },
+
+                tictactoe: {
+                    wins: 0,
+                    losses: 0,
+                    draws: 0
+                },
+
+                reaction: {
+                    bestTime: null,
+                    averageTime: null,
+                    attempts: []
+                },
+
+                memory: {
+                    bestTime: null,
+                    bestMoves: null
+                },
+
+                platformer: {
+                    highScore: 0
+                }
+            },
+
+            achievements: {
+                unlocked: []
+            },
+
+            stats: {
+                firstLaunch: Date.now(),
+                lastPlayed: Date.now()
+            }
+        };
+    }
+
+    static load() {
+        try {
+            const raw = localStorage.getItem(
+                Constants.STORAGE_KEY
+            );
+
+            if (!raw) {
+                const data =
+                    StorageManager.defaultData();
+
+                StorageManager.save(data);
+
+                return data;
+            }
+
+            const parsed = JSON.parse(raw);
+
+            return StorageManager.mergeDefaults(
+                parsed
+            );
+        } catch (error) {
+            console.error(
+                "Storage load failed:",
+                error
+            );
+
+            const data =
+                StorageManager.defaultData();
+
+            StorageManager.save(data);
+
+            return data;
+        }
+    }
+
+    static save(data) {
+        try {
+            localStorage.setItem(
+                Constants.STORAGE_KEY,
+                JSON.stringify(data)
+            );
+        } catch (error) {
+            console.error(
+                "Storage save failed:",
+                error
+            );
+        }
+    }
+
+    static reset() {
+        localStorage.removeItem(
+            Constants.STORAGE_KEY
+        );
+
+        const fresh =
+            StorageManager.defaultData();
+
+        StorageManager.save(fresh);
+
+        return fresh;
+    }
+
+    static mergeDefaults(savedData) {
+        const defaults =
+            StorageManager.defaultData();
+
+        return {
+            ...defaults,
+
+            ...savedData,
+
+            profile: {
+                ...defaults.profile,
+                ...savedData.profile
+            },
+
+            settings: {
+                ...defaults.settings,
+                ...savedData.settings
+            },
+
+            scores: {
+                ...defaults.scores,
+                ...savedData.scores
+            },
+
+            achievements: {
+                ...defaults.achievements,
+                ...savedData.achievements
+            },
+
+            stats: {
+                ...defaults.stats,
+                ...savedData.stats
+            }
+        };
+    }
+}
+
+export class GameStorage {
+    static getData() {
+        return StorageManager.load();
+    }
+
+    static saveData(data) {
+        StorageManager.save(data);
+    }
+
+    static update(callback) {
+        const data =
+            StorageManager.load();
+
+        callback(data);
+
+        StorageManager.save(data);
+
+        return data;
+    }
+
+    static resetAll() {
+        return StorageManager.reset();
+    }
+}
+
+export class ProfileStorage {
+    static getUsername() {
+        return StorageManager.load()
+            .profile.username;
+    }
+
+    static setUsername(username) {
+        GameStorage.update(data => {
+            data.profile.username =
+                username.trim() ||
+                "Player";
+        });
+    }
+
+    static addPlaytime(seconds) {
+        GameStorage.update(data => {
+            data.profile.totalPlaytime +=
+                seconds;
+        });
+    }
+
+    static incrementGamesPlayed() {
+        GameStorage.update(data => {
+            data.profile.gamesPlayed++;
+        });
+    }
+
+    static getProfile() {
+        return StorageManager.load()
+            .profile;
+    }
+}
+
+export class SettingsStorage {
+    static getSettings() {
+        return StorageManager.load()
+            .settings;
+    }
+
+    static updateSetting(
+        key,
+        value
+    ) {
+        GameStorage.update(data => {
+            data.settings[key] =
+                value;
+        });
+    }
+
+    static setTheme(theme) {
+        this.updateSetting(
+            "theme",
+            theme
+        );
+    }
+
+    static setSound(enabled) {
+        this.updateSetting(
+            "sound",
+            enabled
+        );
+    }
+
+    static setMusic(enabled) {
+        this.updateSetting(
+            "music",
+            enabled
+        );
+    }
+
+    static setDifficulty(
+        difficulty
+    ) {
+        this.updateSetting(
+            "difficulty",
+            difficulty
+        );
+    }
+}
+
+export class AchievementStorage {
+    static unlock(name) {
+        GameStorage.update(data => {
+            if (
+                !data.achievements.unlocked.includes(
+                    name
+                )
+            ) {
+                data.achievements.unlocked.push(
+                    name
+                );
+            }
+        });
+    }
+
+    static isUnlocked(name) {
+        return StorageManager.load()
+            .achievements.unlocked.includes(
+                name
+            );
+    }
+
+    static getUnlocked() {
+        return StorageManager.load()
+            .achievements.unlocked;
+    }
+
+    static count() {
+        return this.getUnlocked()
+            .length;
+    }
+}
+
+export class SnakeStorage {
+    static getHighScore() {
+        return StorageManager.load()
+            .scores.snake.highScore;
+    }
+
+    static setHighScore(score) {
+        GameStorage.update(data => {
+            data.scores.snake.highScore =
+                Math.max(
+                    score,
+                    data.scores.snake
+                        .highScore
+                );
+        });
+    }
+}
+
+export class TicTacToeStorage {
+    static addWin() {
+        GameStorage.update(data => {
+            data.scores.tictactoe.wins++;
+        });
+    }
+
+    static addLoss() {
+        GameStorage.update(data => {
+            data.scores.tictactoe
+                .losses++;
+        });
+    }
+
+    static addDraw() {
+        GameStorage.update(data => {
+            data.scores.tictactoe
+                .draws++;
+        });
+    }
+
+    static getStats() {
+        return StorageManager.load()
+            .scores.tictactoe;
+    }
+}
+
+export class ReactionStorage {
+    static saveAttempt(time) {
+        GameStorage.update(data => {
+            const attempts =
+                data.scores.reaction
+                    .attempts;
+
+            attempts.push(time);
+
+            if (
+                attempts.length > 100
+            ) {
+                attempts.shift();
+            }
+
+            data.scores.reaction.bestTime =
+                data.scores.reaction
+                    .bestTime === null
+                    ? time
+                    : Math.min(
+                          data.scores.reaction
+                              .bestTime,
+                          time
+                      );
+
+            const total =
+                attempts.reduce(
+                    (sum, value) =>
+                        sum + value,
+                    0
+                );
+
+            data.scores.reaction.averageTime =
+                total /
+                attempts.length;
+        });
+    }
+
+    static getData() {
+        return StorageManager.load()
+            .scores.reaction;
+    }
+}
+
+export class MemoryStorage {
+    static saveResult(
+        time,
+        moves
+    ) {
+        GameStorage.update(data => {
+            const current =
+                data.scores.memory;
+
+            if (
+                current.bestTime ===
+                    null ||
+                time <
+                    current.bestTime
+            ) {
+                current.bestTime =
+                    time;
+            }
+
+            if (
+                current.bestMoves ===
+                    null ||
+                moves <
+                    current.bestMoves
+            ) {
+                current.bestMoves =
+                    moves;
+            }
+        });
+    }
+
+    static getData() {
+        return StorageManager.load()
+            .scores.memory;
+    }
+}
+
+export class PlatformerStorage {
+    static getHighScore() {
+        return StorageManager.load()
+            .scores.platformer
+                .highScore;
+    }
+
+    static saveHighScore(
+        score
+    ) {
+        GameStorage.update(data => {
+            data.scores.platformer
+                .highScore = Math.max(
+                score,
+                data.scores.platformer
+                    .highScore
+            );
+        });
+    }
+}
+
+export class StatsStorage {
+    static updateLastPlayed() {
+        GameStorage.update(data => {
+            data.stats.lastPlayed =
+                Date.now();
+        });
+    }
+
+    static getStats() {
+        return StorageManager.load()
+            .stats;
+    }
+}

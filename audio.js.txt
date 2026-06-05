@@ -1,0 +1,438 @@
+import { SettingsStorage } from "./storage.js";
+
+export class AudioManager {
+    constructor() {
+        this.audioContext = null;
+        this.masterVolume = 0.5;
+        this.musicVolume = 0.25;
+        this.soundVolume = 0.6;
+
+        this.musicOscillator = null;
+        this.musicGain = null;
+
+        this.initialized = false;
+    }
+
+    init() {
+        if (this.initialized) {
+            return;
+        }
+
+        try {
+            this.audioContext =
+                new (window.AudioContext ||
+                    window.webkitAudioContext)();
+
+            this.initialized = true;
+        } catch (error) {
+            console.warn(
+                "Web Audio API unavailable",
+                error
+            );
+        }
+    }
+
+    ensureContext() {
+        if (!this.initialized) {
+            this.init();
+        }
+
+        if (
+            this.audioContext &&
+            this.audioContext.state ===
+                "suspended"
+        ) {
+            this.audioContext.resume();
+        }
+    }
+
+    isSoundEnabled() {
+        return SettingsStorage.getSettings()
+            .sound;
+    }
+
+    isMusicEnabled() {
+        return SettingsStorage.getSettings()
+            .music;
+    }
+
+    createGain(volume) {
+        const gain =
+            this.audioContext.createGain();
+
+        gain.gain.value =
+            volume *
+            this.masterVolume;
+
+        gain.connect(
+            this.audioContext.destination
+        );
+
+        return gain;
+    }
+
+    playTone(
+        frequency,
+        duration = 0.1,
+        type = "sine",
+        volume = 0.5
+    ) {
+        if (!this.isSoundEnabled()) {
+            return;
+        }
+
+        this.ensureContext();
+
+        if (!this.audioContext) {
+            return;
+        }
+
+        const oscillator =
+            this.audioContext.createOscillator();
+
+        const gain =
+            this.createGain(volume);
+
+        oscillator.type = type;
+
+        oscillator.frequency.value =
+            frequency;
+
+        oscillator.connect(gain);
+
+        oscillator.start();
+
+        gain.gain.setValueAtTime(
+            volume,
+            this.audioContext.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            this.audioContext.currentTime +
+                duration
+        );
+
+        oscillator.stop(
+            this.audioContext.currentTime +
+                duration
+        );
+    }
+
+    playSequence(notes) {
+        if (!this.isSoundEnabled()) {
+            return;
+        }
+
+        this.ensureContext();
+
+        if (!this.audioContext) {
+            return;
+        }
+
+        let offset = 0;
+
+        notes.forEach(note => {
+            const oscillator =
+                this.audioContext.createOscillator();
+
+            const gain =
+                this.createGain(
+                    note.volume ?? 0.4
+                );
+
+            oscillator.type =
+                note.type || "sine";
+
+            oscillator.frequency.value =
+                note.frequency;
+
+            oscillator.connect(gain);
+
+            oscillator.start(
+                this.audioContext.currentTime +
+                    offset
+            );
+
+            oscillator.stop(
+                this.audioContext.currentTime +
+                    offset +
+                    note.duration
+            );
+
+            offset += note.duration;
+        });
+    }
+
+    playClick() {
+        this.playTone(
+            850,
+            0.05,
+            "square",
+            this.soundVolume
+        );
+    }
+
+    playHover() {
+        this.playTone(
+            650,
+            0.04,
+            "triangle",
+            0.25
+        );
+    }
+
+    playSuccess() {
+        this.playSequence([
+            {
+                frequency: 523,
+                duration: 0.08
+            },
+            {
+                frequency: 659,
+                duration: 0.08
+            },
+            {
+                frequency: 784,
+                duration: 0.12
+            }
+        ]);
+    }
+
+    playError() {
+        this.playSequence([
+            {
+                frequency: 300,
+                duration: 0.08,
+                type: "sawtooth"
+            },
+            {
+                frequency: 180,
+                duration: 0.12,
+                type: "sawtooth"
+            }
+        ]);
+    }
+
+    playAchievement() {
+        this.playSequence([
+            {
+                frequency: 523,
+                duration: 0.08
+            },
+            {
+                frequency: 659,
+                duration: 0.08
+            },
+            {
+                frequency: 784,
+                duration: 0.08
+            },
+            {
+                frequency: 1046,
+                duration: 0.2
+            }
+        ]);
+    }
+
+    playSnakeEat() {
+        this.playTone(
+            900,
+            0.06,
+            "square",
+            0.45
+        );
+    }
+
+    playSnakeDeath() {
+        this.playSequence([
+            {
+                frequency: 500,
+                duration: 0.08,
+                type: "square"
+            },
+            {
+                frequency: 350,
+                duration: 0.08,
+                type: "square"
+            },
+            {
+                frequency: 150,
+                duration: 0.2,
+                type: "square"
+            }
+        ]);
+    }
+
+    playReactionStart() {
+        this.playTone(
+            700,
+            0.08,
+            "triangle",
+            0.4
+        );
+    }
+
+    playReactionResult() {
+        this.playTone(
+            1000,
+            0.1,
+            "sine",
+            0.5
+        );
+    }
+
+    playMemoryFlip() {
+        this.playTone(
+            550,
+            0.05,
+            "triangle",
+            0.35
+        );
+    }
+
+    playMemoryMatch() {
+        this.playSequence([
+            {
+                frequency: 700,
+                duration: 0.05
+            },
+            {
+                frequency: 900,
+                duration: 0.08
+            }
+        ]);
+    }
+
+    playJump() {
+        this.playTone(
+            400,
+            0.07,
+            "square",
+            0.45
+        );
+    }
+
+    playCoin() {
+        this.playSequence([
+            {
+                frequency: 900,
+                duration: 0.04
+            },
+            {
+                frequency: 1200,
+                duration: 0.08
+            }
+        ]);
+    }
+
+    playHit() {
+        this.playTone(
+            180,
+            0.12,
+            "sawtooth",
+            0.5
+        );
+    }
+
+    startBackgroundMusic() {
+        if (!this.isMusicEnabled()) {
+            return;
+        }
+
+        this.ensureContext();
+
+        if (
+            !this.audioContext ||
+            this.musicOscillator
+        ) {
+            return;
+        }
+
+        this.musicOscillator =
+            this.audioContext.createOscillator();
+
+        this.musicGain =
+            this.audioContext.createGain();
+
+        this.musicOscillator.type =
+            "triangle";
+
+        this.musicOscillator.frequency.value =
+            110;
+
+        this.musicGain.gain.value =
+            this.musicVolume;
+
+        this.musicOscillator.connect(
+            this.musicGain
+        );
+
+        this.musicGain.connect(
+            this.audioContext.destination
+        );
+
+        this.musicOscillator.start();
+    }
+
+    stopBackgroundMusic() {
+        if (
+            !this.musicOscillator
+        ) {
+            return;
+        }
+
+        try {
+            this.musicOscillator.stop();
+        } catch {}
+
+        this.musicOscillator =
+            null;
+
+        this.musicGain = null;
+    }
+
+    refreshMusicState() {
+        if (
+            this.isMusicEnabled()
+        ) {
+            this.startBackgroundMusic();
+        } else {
+            this.stopBackgroundMusic();
+        }
+    }
+
+    setMasterVolume(value) {
+        this.masterVolume =
+            Math.max(
+                0,
+                Math.min(1, value)
+            );
+    }
+
+    setSoundVolume(value) {
+        this.soundVolume =
+            Math.max(
+                0,
+                Math.min(1, value)
+            );
+    }
+
+    setMusicVolume(value) {
+        this.musicVolume =
+            Math.max(
+                0,
+                Math.min(1, value)
+            );
+
+        if (
+            this.musicGain
+        ) {
+            this.musicGain.gain.value =
+                this.musicVolume;
+        }
+    }
+}
+
+export const AudioSystem =
+    new AudioManager();

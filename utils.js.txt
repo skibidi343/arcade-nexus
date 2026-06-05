@@ -1,0 +1,336 @@
+export class RandomUtils {
+    static int(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    static float(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    static chance(percent) {
+        return Math.random() * 100 < percent;
+    }
+
+    static pick(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    static shuffle(array) {
+        const arr = [...array];
+
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+
+        return arr;
+    }
+
+    static uuid() {
+        return crypto.randomUUID();
+    }
+}
+
+export class CollisionUtils {
+    static rectRect(a, b) {
+        return (
+            a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y
+        );
+    }
+
+    static pointRect(point, rect) {
+        return (
+            point.x >= rect.x &&
+            point.x <= rect.x + rect.width &&
+            point.y >= rect.y &&
+            point.y <= rect.y + rect.height
+        );
+    }
+
+    static distance(x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    static circleCircle(c1, c2) {
+        return (
+            this.distance(c1.x, c1.y, c2.x, c2.y) <
+            c1.radius + c2.radius
+        );
+    }
+}
+
+export class MathUtils {
+    static clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    static lerp(start, end, amount) {
+        return start + (end - start) * amount;
+    }
+
+    static map(value, inMin, inMax, outMin, outMax) {
+        return (
+            ((value - inMin) * (outMax - outMin)) /
+                (inMax - inMin) +
+            outMin
+        );
+    }
+
+    static degreesToRadians(degrees) {
+        return degrees * (Math.PI / 180);
+    }
+
+    static radiansToDegrees(radians) {
+        return radians * (180 / Math.PI);
+    }
+}
+
+export class Timer {
+    constructor() {
+        this.startTime = 0;
+        this.running = false;
+    }
+
+    start() {
+        this.startTime = performance.now();
+        this.running = true;
+    }
+
+    stop() {
+        if (!this.running) {
+            return 0;
+        }
+
+        const elapsed =
+            performance.now() - this.startTime;
+
+        this.running = false;
+
+        return elapsed;
+    }
+
+    getElapsed() {
+        if (!this.running) {
+            return 0;
+        }
+
+        return performance.now() - this.startTime;
+    }
+
+    reset() {
+        this.startTime = performance.now();
+    }
+}
+
+export class AnimationUtils {
+    static fadeIn(element, duration = 300) {
+        element.style.opacity = "0";
+        element.style.display = "block";
+
+        let start = null;
+
+        const animate = timestamp => {
+            if (!start) {
+                start = timestamp;
+            }
+
+            const progress =
+                (timestamp - start) / duration;
+
+            element.style.opacity =
+                Math.min(progress, 1);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    static fadeOut(element, duration = 300) {
+        let start = null;
+
+        const animate = timestamp => {
+            if (!start) {
+                start = timestamp;
+            }
+
+            const progress =
+                (timestamp - start) / duration;
+
+            element.style.opacity =
+                1 - Math.min(progress, 1);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                element.style.display = "none";
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    static pulse(element, scale = 1.05) {
+        element.animate(
+            [
+                {
+                    transform: "scale(1)"
+                },
+                {
+                    transform: `scale(${scale})`
+                },
+                {
+                    transform: "scale(1)"
+                }
+            ],
+            {
+                duration: 350,
+                easing: "ease"
+            }
+        );
+    }
+
+    static shake(element) {
+        element.animate(
+            [
+                { transform: "translateX(0)" },
+                { transform: "translateX(-6px)" },
+                { transform: "translateX(6px)" },
+                { transform: "translateX(-4px)" },
+                { transform: "translateX(4px)" },
+                { transform: "translateX(0)" }
+            ],
+            {
+                duration: 300
+            }
+        );
+    }
+}
+
+export class DOMUtils {
+    static qs(selector) {
+        return document.querySelector(selector);
+    }
+
+    static qsa(selector) {
+        return [...document.querySelectorAll(selector)];
+    }
+
+    static create(tag, className = "") {
+        const el = document.createElement(tag);
+
+        if (className) {
+            el.className = className;
+        }
+
+        return el;
+    }
+
+    static remove(element) {
+        if (element?.parentNode) {
+            element.parentNode.removeChild(element);
+        }
+    }
+
+    static clear(element) {
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    }
+}
+
+export class TimeUtils {
+    static formatMilliseconds(ms) {
+        return `${Math.round(ms)}ms`;
+    }
+
+    static formatSeconds(seconds) {
+        const mins = Math.floor(seconds / 60);
+
+        const secs = seconds % 60;
+
+        return `${mins}:${secs
+            .toString()
+            .padStart(2, "0")}`;
+    }
+
+    static formatPlaytime(totalSeconds) {
+        const hours = Math.floor(
+            totalSeconds / 3600
+        );
+
+        const minutes = Math.floor(
+            (totalSeconds % 3600) / 60
+        );
+
+        return `${hours}h ${minutes}m`;
+    }
+}
+
+export class EventBus {
+    constructor() {
+        this.events = {};
+    }
+
+    on(event, callback) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+
+        this.events[event].push(callback);
+    }
+
+    emit(event, data) {
+        if (!this.events[event]) {
+            return;
+        }
+
+        this.events[event].forEach(callback =>
+            callback(data)
+        );
+    }
+
+    off(event, callback) {
+        if (!this.events[event]) {
+            return;
+        }
+
+        this.events[event] =
+            this.events[event].filter(
+                cb => cb !== callback
+            );
+    }
+}
+
+export const AppEvents = new EventBus();
+
+export const Constants = {
+    STORAGE_KEY: "arcade_nexus",
+
+    THEMES: {
+        DARK: "dark",
+        LIGHT: "light"
+    },
+
+    DIFFICULTY: {
+        EASY: "easy",
+        NORMAL: "normal",
+        HARD: "hard"
+    },
+
+    ACHIEVEMENTS: {
+        FIRST_WIN: "First Win",
+        SNAKE_50: "Snake Score 50+",
+        REACTION_200: "Reaction Time < 200ms",
+        MEMORY_PERFECT: "Perfect Memory Run"
+    }
+};
